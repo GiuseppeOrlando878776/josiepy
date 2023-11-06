@@ -270,7 +270,7 @@ class TsCapScheme(ConvectiveScheme):
         eps = 0
         tol = 1e-10
         p0 = self.problem.eos[Phases.PHASE1].p0
-        p0 = self.problem.sigma * Hlim
+        p0 = np.minimum(self.problem.sigma * Hlim, self.problem.eos[Phases.PHASE1].p0)
         index = np.where(
             (np.abs(phi(arho1, arho2, abar, ad, Hlim)) > tol * p0)
             & (abar > eps)
