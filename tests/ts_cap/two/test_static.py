@@ -38,7 +38,7 @@ def test_static(plot, write, request, init_schemes, init_solver, nSmoothPass):
     top.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
 
     mesh = Mesh(left, bottom, right, top, MUSCLCell)
-    N = 80
+    N = 100
     mesh.interpolate(N, N)
     mesh.generate()
 
@@ -133,7 +133,7 @@ def test_static(plot, write, request, init_schemes, init_solver, nSmoothPass):
 
     solver = init_solver(mesh, schemes, init_fun)
 
-    final_time = 1e-4
+    final_time = 1
     final_time_test = 1e-4
     CFL = 0.4
     if write:
@@ -153,7 +153,7 @@ def test_static(plot, write, request, init_schemes, init_solver, nSmoothPass):
         logger.addHandler(fh)
 
         # Write strategy
-        strategy = TimeStrategy(dt_save=final_time / 10, animate=False)
+        strategy = TimeStrategy(dt_save=final_time / 100, animate=False)
         writer = XDMFWriter(
             test_name + f"{now}.xdmf", strategy, solver, final_time=final_time, CFL=CFL
         )

@@ -20,7 +20,7 @@ from josie.bn.eos import TwoPhaseEOS
 from josie.FourEq.eos import LinearizedGas
 
 from josie.ts_cap.bc import Inlet
-from josie.bc import Neumann
+from josie.bc import Neumann, Direction, make_periodic
 
 from dataclasses import dataclass
 from .conftest import circle
@@ -53,7 +53,7 @@ atom_params = [
         We=100,
         sigma=1e-2,
         rho0=1e3,
-        final_time=3,
+        final_time=4,
         final_time_test=1e-2,
     ),
     # AtomParam(
@@ -118,14 +118,14 @@ def test_atom(write, init_schemes, init_solver, atom_param):
     V_in = 0
 
     # left, right = make_periodic(left, right, Direction.X)
-    # bottom, top = make_periodic(bottom, top, Direction.Y)
+    bottom, top = make_periodic(bottom, top, Direction.Y)
     left.bc = Inlet(abar_in, ad_in, rho1d_in, capSigma_in, U_in, V_in, eos)
     right.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
-    bottom.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
-    top.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
+    # bottom.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
+    # top.bc = Neumann(np.zeros(len(Q.fields)).view(Q))
 
     mesh = Mesh(left, bottom, right, top, MUSCLCell)
-    N = 80
+    N = 100
     mesh.interpolate(int(box_ratio * N), N)
     mesh.generate()
 
@@ -133,6 +133,7 @@ def test_atom(write, init_schemes, init_solver, atom_param):
     dx = mesh.cells._centroids[1, 1, 0, 0] - mesh.cells._centroids[0, 1, 0, 0]
     dy = mesh.cells._centroids[1, 1, 0, 1] - mesh.cells._centroids[1, 0, 0, 1]
     norm_grada_min = 0.05 * 1 / dx
+    norm_grada_min = 0
 
     schemes = init_schemes(eos, sigma, Hmax, dx, dy, norm_grada_min, nSmoothPass)
 

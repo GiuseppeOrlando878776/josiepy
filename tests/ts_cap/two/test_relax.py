@@ -40,11 +40,11 @@ def test_relax(plot, write, request, init_schemes, shape_fun, init_solver, nSmoo
     mesh.interpolate(N, N)
     mesh.generate()
 
-    final_time = 20e-3
+    final_time = 105e-2
     final_time_test = 1.4e-3
     CFL = 0.4
 
-    sigma = 8e2
+    sigma = 8e1
     Hmax = 1e3
     dx = mesh.cells._centroids[1, 1, 0, 0] - mesh.cells._centroids[0, 1, 0, 0]
     dy = mesh.cells._centroids[1, 1, 0, 1] - mesh.cells._centroids[1, 0, 0, 1]
@@ -170,7 +170,7 @@ def test_relax(plot, write, request, init_schemes, shape_fun, init_solver, nSmoo
         logger.addHandler(fh)
 
         # Write strategy
-        strategy = TimeStrategy(dt_save=1e-3, animate=False)
+        strategy = TimeStrategy(dt_save=1e-2, animate=False)
         writer = XDMFWriter(
             test_name + f"{now}.xdmf", strategy, solver, final_time=final_time, CFL=CFL
         )
