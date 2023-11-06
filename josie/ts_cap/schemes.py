@@ -175,9 +175,7 @@ class TsCapScheme(ConvectiveScheme):
         rho = arho1 + arho2 + arho1d
 
         # Compute estimator of the relaxation within [0,1]
-        ind = np.where(abarrho / rho < 0)
         abar = np.minimum(np.maximum(abarrho / rho, 0), 1)
-        arho1[ind] = 0
 
         values[..., fields.abar] = abar
         if self.geoUpdate:
@@ -291,13 +289,18 @@ class TsCapScheme(ConvectiveScheme):
                 * DH[index]
             )
             F = phi(arho1[index], arho2[index], abar[index], ad[index], Hlim[index])
-            dphi_trans = (
-                R
-                / F
-                * (
-                    dphi_dad(arho1[index], arho2[index], abar[index], ad[index]) / rho1d
-                    - dphi_dm1(arho1[index], abar[index], ad[index])
-                )
+            dphi_trans = np.where(
+                R > 0,
+                (
+                    R
+                    / F
+                    * (
+                        dphi_dad(arho1[index], arho2[index], abar[index], ad[index])
+                        / rho1d
+                        - dphi_dm1(arho1[index], abar[index], ad[index])
+                    )
+                ),
+                0,
             )
             # NR step
             dabar[index] = -F / (
@@ -314,11 +317,12 @@ class TsCapScheme(ConvectiveScheme):
 
             # Update values
             abar[index] += dabar[index]
-            arho1[index] += -dabar[index] / F * R
+            # print(-dphi_dabar(arho1[index], arho2[index], abar[index], ad[index]))
+            arho1[index] += np.where(R > 0, -dabar[index] / F * R, 0)
             # capSigma += dabar / f * R * capSigma[index] / md[index]
             # il faut fixer une taille moyenne de depart
-            arho1d[index] += dabar[index] / F * R
-            ad[index] += dabar[index] / F * R / rho1d
+            arho1d[index] += np.where(R > 0, dabar[index] / F * R, 0)
+            ad[index] += np.where(R > 0, dabar[index] / F * R / rho1d, 0)
 
             # Update stored values
             values[..., fields.arho1] = arho1
@@ -666,7 +670,6 @@ class TsCapScheme(ConvectiveScheme):
                 )
             )
         ):
-            np.set_printoptions(linewidth=250)
             print(U[..., 0])
             exit()
 
