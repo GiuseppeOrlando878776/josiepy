@@ -66,7 +66,7 @@ def riemann2Q(state, eos):
     )
 
 
-def test_twoscale(riemann_state, Scheme, plot, animate, request):
+def test_twoscale(riemann_state, Scheme, write, request):
     left = Line([0, 0], [0, 1])
     bottom = Line([0, 0], [2, 0])
     right = Line([2, 0], [2, 1])
@@ -121,64 +121,48 @@ def test_twoscale(riemann_state, Scheme, plot, animate, request):
     cells = solver.mesh.cells
     dt = scheme.CFL(cells, CFL)
 
-    def init():
-        return ax, im
+    if write:
+        import logging
+        from datetime import datetime
+        from josie.io.write.writer import XDMFWriter
+        from josie.io.write.strategy import TimeStrategy
 
-    if plot or animate:
-        fig, ax = plt.subplots()
+        logger = logging.getLogger("josie")
+        logger.setLevel(logging.DEBUG)
 
-        im = ax.imshow([[]], origin="lower", extent=(0, 2, 0, 1), aspect="equal")
-
-        data = []
-
-    if animate:
-        nFrames = 30
-        allFrames = False
-        time_interval = riemann_state.final_time / nFrames
-
-    while t <= final_time:
-        if animate and (len(data) - 1 < t // time_interval or t == 0 or allFrames):
-            print("save frame")
-            cells = solver.mesh.cells
-            data.append(np.array(cells.values[..., 0, Q.fields.pbar]))
-
-        dt = scheme.CFL(cells, CFL)
-
-        assert ~np.isnan(dt)
-
-        solver.step(dt)
-
-        t += dt
-        print(f"Time: {t}, dt: {dt}")
-
-    # Check that we reached the final time
-    assert t >= final_time
-
-    if plot:
-        # Plot final step solution
-
-        out = cells.values[..., 0, Q.fields.pbar]
-        im.set_data(out.transpose())
-
-        plt.tight_layout()
-        plt.show()
-        plt.close()
-
-    if animate:
-        min_var = min(np.min(data[frame]) for frame in np.arange(0, len(data)))
-        max_var = max(np.max(data[frame]) for frame in np.arange(0, len(data)))
-        im.set_clim(min_var, max_var)
-
-        def update(frame):
-            im.set_data(data[frame].transpose())
-            return ax, im
-
-        _ = FuncAnimation(
-            fig,
-            update,
-            frames=np.arange(0, len(data)),
-            init_func=init,
-            blit=True,
-            interval=200,
+        fh = logging.FileHandler(
+            "two_scale_four_eq_Rusanov_Godunov.log"
         )
-        plt.show()
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        fh.setFormatter(formatter)
+
+        logger.addHandler(fh)
+
+        # Write strategy
+        dt_save = final_time / 100
+        strategy = TimeStrategy(dt_save=dt_save, animate=False)
+        writer = XDMFWriter(
+            "two_scale_four_eq_Rusanov_Godunov.xdmf",
+            strategy,
+            solver,
+            final_time=final_time,
+            CFL=CFL,
+        )
+
+        writer.solve()
+    else:
+        while t <= final_time:
+            dt = scheme.CFL(cells, CFL)
+
+            assert ~np.isnan(dt)
+
+            solver.step(dt)
+
+            t += dt
+            print(f"Time: {t}, dt: {dt}")
+
+        # Check that we reached the final time
+        assert t >= final_time
