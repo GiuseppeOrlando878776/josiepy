@@ -89,7 +89,7 @@ def test_twoscale(riemann_state, Scheme, write, request):
         mesh = Mesh(left, bottom, right, top, MUSCLCell)
     else:
         mesh = Mesh(left, bottom, right, top, SimpleCell)
-    mesh.interpolate(100, 50)
+    mesh.interpolate(128, 64)
     mesh.generate()
 
     def init_fun(cells: MeshCellSet):
