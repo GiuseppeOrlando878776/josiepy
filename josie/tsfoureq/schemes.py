@@ -268,7 +268,7 @@ class TSFourEqScheme(ConvectiveScheme):
         """
 
         # Relaxation to update the volume fraction
-        self.relaxForLinearizedEOS(values)
+        self.relaxation(values)
 
         # auxilliary variables update
         self.auxilliaryVariableUpdate(values)
